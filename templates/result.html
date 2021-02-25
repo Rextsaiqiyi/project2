@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Map result</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+        <script type="text/javascript" src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+        <style>
+            #map1 {height: 800px;}
+        </style>
+    </head>
+    <body>
+        <div id="map1"></div>
+        <script>
+            var mymap=L.map('map1').setView([51.0499,-114.0666], 11);
+
+            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+              attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+              maxZoom: 18,
+              id: 'mapbox/streets-v11',
+              tileSize: 512,
+              zoomOffset: -1,
+              accessToken: 'pk.eyJ1IjoicmV4dHNhaXFpeWkiLCJhIjoiY2trbDI0dHcyMGNoazJvcHJ4NjRzbmQ1dSJ9.U9khOwx7gRDS8jClvmTDQQ'
+            }).addTo(mymap);
+
+            building = "https://data.calgary.ca/resource/c2es-76ed.geojson?$where=issueddate%20>%20%27"+"{{From}}"+"%27%20and%20issueddate%20<%20%27"+"{{To}}"+"%27"
+
+            var markers=L.markerClusterGroup();
+            var buildinglayer=fetch(building)
+                              .then(function(response) {
+                                return response.json();
+                              })
+                              .then(function(data) {
+                                L.geoJSON(data, {onEachFeature: function (feature, layer){
+                                  markers.addLayer(L.marker([feature.geometry.coordinates[1],feature.geometry.coordinates[0]]).bindPopup('Issueddate: '+feature.properties.issueddate+'<br>'+'Workclassgroup: '+feature.properties.workclassgroup+'<br>'+'Contractorname: '+feature.properties.contractorname+'<br>'+'Communityname: '+feature.properties.communityname+'<br>'+'Originaladdress: '+feature.properties.originaladdress));
+                                }});
+                              });
+            mymap.addLayer(markers);
+        </script>
+
+        <form action="{{url_for('index')}}" method="post">
+          <tr>
+            <td>From:</td>
+            <td><input type="text" name="From" value="1984-10-24" /></td>
+          </tr>
+          <tr>
+            <td>To:</td>
+            <td><input type="text" name="To" value="2021-2-24" /></td>
+          </tr>
+          <tr>
+            <input type="submit" value="submit">
+          </tr>
+        </form>
+
+        <script>
+        $(function() {
+          $('input[name="From"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'),10),
+            locale: {
+                format: 'YYYY-MM-DD'
+            }
+          });
+        });
+        $(function() {
+          $('input[name="To"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'),10),
+            locale: {
+                format: 'YYYY-MM-DD'
+            }
+          });
+        });
+        </script>
+    </body>
+</html>
